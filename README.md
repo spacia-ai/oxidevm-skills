@@ -2,13 +2,13 @@
 
 Skills for building browser applications with the [OxideVM SDK](https://oxidevm.dev/docs/) in Codex and Claude Code.
 
-The upcoming SDK/CLI 0.0.4 starter includes these project skills automatically.
-The published 0.0.3 starter does not include them. A versioned plugin release
-is not available yet.
+SDK/CLI starters include these project skills from version 0.0.4.
+Earlier starters can use the plugin installation below. Versioned plugin ZIPs
+are available under [Releases](https://github.com/spacia-ai/oxidevm-skills/releases) after release approval.
 
 ## New projects
 
-After the starter release, open its generated folder in Codex or Claude Code.
+Open the generated starter folder in Codex or Claude Code.
 Try:
 
 > Add a revenue chart from the DataFrame result. Keep Python running in Linux.
