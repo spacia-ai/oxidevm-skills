@@ -4,9 +4,7 @@ import base64
 import hashlib
 import io
 import json
-import os
 import re
-import subprocess
 import tarfile
 import urllib.request
 import zipfile
@@ -101,11 +99,6 @@ def qualify(selected: str, root: Path = ROOT) -> dict:
             'cliArchiveSHA256': hashlib.sha256(data).hexdigest(), 'skillsRevision': pin['revision']}
 
 
-def require_publishing_job(environment: dict) -> None:
-    if environment.get('GITHUB_ACTIONS') != 'true' or environment.get('GITHUB_WORKFLOW_REF') != REPOSITORY + '/.github/workflows/sync-sdk.yml@refs/heads/main' or environment.get('SKILLS_RELEASE_APPROVED') != 'true':
-        raise ValueError('Publication requires the protected main publishing job')
-
-
 def build_bundle(root: Path = ROOT) -> Path:
     check(root)
     version = json.loads((root / 'plugin.json').read_text())['version']
@@ -122,11 +115,6 @@ def build_bundle(root: Path = ROOT) -> Path:
     return archive
 
 
-def gh(arguments: list[str], payload=None):
-    result = subprocess.run(['gh', *arguments], input=None if payload is None else json.dumps(payload), capture_output=True, text=True, check=True)
-    return json.loads(result.stdout) if result.stdout.strip() else None
-
-
 def prepare(selected: str) -> dict:
     evidence = qualify(selected)
     plugin = json.loads((ROOT / 'plugin.json').read_text()); plugin['version'] = evidence['sdkVersion']
@@ -136,48 +124,13 @@ def prepare(selected: str) -> dict:
     return evidence
 
 
-def publish() -> None:
-    require_publishing_job(dict(os.environ))
-    evidence = json.loads((ROOT / 'compatibility.json').read_text())
-    if qualify(evidence['sdkVersion']) != evidence or evidence['status'] != 'qualified':
-        raise ValueError('Published SDK no longer matches the reviewed skill inputs')
-    latest = json.loads(fetch('https://registry.npmjs.org/@oxidevm%2fsdk/latest', 1024 * 1024))
-    if latest['version'] != evidence['sdkVersion']:
-        raise ValueError('An older skill version cannot replace latest')
-    archive = build_bundle(); tag = 'v' + evidence['sdkVersion']
-    result = subprocess.run(['gh', 'release', 'view', tag, '--repo', REPOSITORY, '--json', 'isDraft'], capture_output=True, text=True)
-    if result.returncode == 0:
-        # Compare downloaded bytes before resuming or retaining an existing release.
-        import tempfile
-        with tempfile.TemporaryDirectory() as temporary:
-            for file in [archive, ROOT / 'dist/SHA256SUMS']:
-                downloaded = subprocess.run(['gh', 'release', 'download', tag, '--repo', REPOSITORY, '--pattern', file.name, '--dir', temporary], capture_output=True, text=True)
-                if downloaded.returncode == 0:
-                    if (Path(temporary) / file.name).read_bytes() != file.read_bytes():
-                        raise ValueError('Existing published skill assets are immutable')
-                elif not json.loads(result.stdout)['isDraft']:
-                    raise ValueError('Published skill release has missing assets')
-                else:
-                    subprocess.run(['gh', 'release', 'upload', tag, str(file), '--repo', REPOSITORY], check=True)
-    else:
-        # A transport or authorization failure must not be interpreted as an absent release.
-        releases = gh(['api', f'repos/{REPOSITORY}/releases?per_page=100'])
-        if any(release['tag_name'] == tag for release in releases):
-            raise ValueError('Existing release could not be inspected')
-        subprocess.run(['gh', 'release', 'create', tag, str(archive), str(ROOT / 'dist/SHA256SUMS'), '--repo', REPOSITORY, '--target', os.environ['GITHUB_SHA'], '--draft', '--title', f'OxideVM skills {evidence["sdkVersion"]}', '--notes', f'Skills verified against the published OxideVM SDK and CLI {evidence["sdkVersion"]}.'], check=True)
-    subprocess.run(['gh', 'release', 'edit', tag, '--repo', REPOSITORY, '--draft=false', '--latest'], check=True)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', default='latest')
     parser.add_argument('--prepare', action='store_true')
     parser.add_argument('--bundle', action='store_true')
-    parser.add_argument('--publish', action='store_true')
     args = parser.parse_args()
-    if args.publish:
-        publish()
-    elif args.bundle:
+    if args.bundle:
         print(build_bundle())
     else:
         print(json.dumps(prepare(args.version) if args.prepare else qualify(args.version), indent=2))
