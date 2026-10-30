@@ -45,6 +45,17 @@ class CatalogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unexpected skill resource'):
             skill_files(self.root)
 
+    def test_image_guidance_uses_the_project_release_and_does_not_invent_local_recipes(self):
+        files = skill_files(self.root)
+        for name in ('oxidevm-sdk', 'oxidevm-starter'):
+            text = files[f'skills/{name}/SKILL.md'].decode()
+            self.assertIn('README.md', text)
+            self.assertIn('release-pinned', text)
+            self.assertIn('do not include an `image/` directory', text)
+            self.assertIn('LICENSES.md', text)
+            self.assertIn('hosting: "frame"', text)
+            self.assertIn('independent author trust', text)
+
 
 if __name__ == '__main__':
     unittest.main()
