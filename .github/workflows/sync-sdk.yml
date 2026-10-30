@@ -1,0 +1,52 @@
+name: Synchronize SDK skills
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the reviewed skills for the current SDK
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: sdk-skills-release
+  cancel-in-progress: false
+jobs:
+  prepare:
+    if: vars.SDK_SKILLS_SYNC_ENABLED == 'true' && github.event_name != 'push' && inputs.publish != true
+    runs-on: [self-hosted, linux, x64, oxidevm-skills]
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests
+      - run: python3 tools/sync_sdk.py --prepare
+      - run: python3 tools/sync_pr.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+  publish:
+    if: vars.SDK_SKILLS_SYNC_ENABLED == 'true' && (github.event_name == 'push' || inputs.publish == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: public-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests
+      - run: python3 tools/check.py
+      - run: python3 tools/sync_sdk.py --publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SKILLS_RELEASE_APPROVED: 'true'

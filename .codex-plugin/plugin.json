@@ -1,0 +1,6 @@
+{
+  "name": "oxidevm",
+  "version": "0.0.4",
+  "description": "Build browser applications with the OxideVM SDK, extend its Linux Python starter, and diagnose integration errors.",
+  "skills": "./skills/"
+}

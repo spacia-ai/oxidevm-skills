@@ -1,0 +1,13 @@
+{
+  "name": "oxidevm",
+  "owner": {
+    "name": "Spacia B.V."
+  },
+  "plugins": [
+    {
+      "name": "oxidevm",
+      "description": "Build browser applications with the OxideVM SDK, extend its Linux Python starter, and diagnose integration errors.",
+      "source": "./"
+    }
+  ]
+}
