@@ -2,5 +2,7 @@
   "schemaVersion": 1,
   "minimumSDKVersion": "0.0.3",
   "sdkVersion": "0.0.4",
-  "status": "unreleased"
+  "status": "qualified",
+  "cliArchiveSHA256": "1cd4c4cae233de5976571710f1387f0ed675ac693619179c34f933c711429e55",
+  "skillsRevision": "60c182d3191d090ad8533620eef05800899e04d6"
 }
