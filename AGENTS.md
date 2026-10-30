@@ -6,6 +6,12 @@ Keep skill bodies under `skills/`. SDK starter copies are generated from an immu
 
 Use Apache-2.0 for first-party instructions and tooling. Preserve LICENSE and NOTICE. Skills do not grant an engine license or authorize publishing, deploying, installing global tools or changing unrelated user settings.
 
-Run `python3 -m unittest discover -s tests` and `python3 tools/check.py` before review. Ordinary CI uses self-hosted runners. Publication uses a protected GitHub-hosted job and stays disabled until owner approval. Never replace published tags or release assets.
+Run `python3 -m unittest discover -s tests` and `python3 tools/check.py` before review.
+Keep `CLAUDE.md` as a relative symlink to `AGENTS.md`. Use descriptive branches.
 
-Keep `CLAUDE.md` as a relative symlink to `AGENTS.md`. Use descriptive branches without agent or provider prefixes.
+CI, SDK synchronization, and publication run through separate private maintainer
+infrastructure. Do not add workflows, publication scripts, credentials, internal
+reports, or persistent self-hosted runners to this public repository. Keep local
+verification and reproducible packaging tools available. Require owner approval
+for releases. Never replace published tags or release assets. Owner commits and
+merges use lukasz@spacia.ai.

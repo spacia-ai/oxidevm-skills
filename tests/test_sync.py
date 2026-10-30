@@ -9,8 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from check import skill_files
-from sync_sdk import inspect_archive, require_publishing_job, build_bundle, public_archive
-from sync_pr import prepare_review_branch
+from sync_sdk import inspect_archive, build_bundle, public_archive
 
 
 def archive(version='0.0.4', tamper=False):
@@ -54,18 +53,6 @@ class SyncTests(unittest.TestCase):
         with patch('sync_sdk.fetch', side_effect=[metadata, metadata, b'corrupt']):
             with self.assertRaisesRegex(ValueError, 'integrity'):
                 public_archive('0.0.4')
-
-    def test_sync_refuses_instruction_changes(self):
-        with patch('sync_pr.subprocess.check_output', return_value='skills/oxidevm-sdk/SKILL.md\n'):
-            with self.assertRaisesRegex(ValueError, 'cannot change'):
-                prepare_review_branch()
-
-    def test_publication_requires_the_protected_main_job(self):
-        with self.assertRaisesRegex(ValueError, 'protected'):
-            require_publishing_job({})
-        with self.assertRaisesRegex(ValueError, 'protected'):
-            require_publishing_job({'GITHUB_ACTIONS': 'true', 'GITHUB_WORKFLOW_REF': 'spacia-ai/oxidevm-skills/.github/workflows/sync-sdk.yml@refs/heads/feature'})
-
 
 if __name__ == '__main__':
     unittest.main()

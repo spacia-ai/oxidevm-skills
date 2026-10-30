@@ -67,21 +67,13 @@ python3 tools/sync_sdk.py --bundle
 
 Host manifests are generated from `plugin.json`. SDK maintainers import an
 immutable public source commit and hash-check it during every CLI build.
-The synchronization workflow verifies the actual npm CLI archive, npm
-integrity, matching SDK dependency, and both clients' bundled skill contents.
-It prepares a metadata-only release branch and review link, and refuses changed
-skill bodies or branch drift. The organization requires a person to open the
-PR. After review and merge, a protected GitHub-hosted job publishes the immutable
-ZIP. Ordinary checks use a self-hosted runner.
-
-`SDK_SKILLS_SYNC_ENABLED` is disabled during preparation. Enabling it and
-approving the protected `public-release` job are separate owner actions. No
-npm token or cross-repository write token is required. Published tags and
-assets are never replaced. This process tracks released SDK versions, not
-unreleased source changes.
+Maintainers verify the actual npm CLI archive and both clients' bundled skills
+before publishing a matching plugin release. Source changes require review.
+Published tags and assets are never replaced. This process tracks released SDK
+versions, not unreleased source changes.
 
 For a local packaging preview, run `python3 tools/sync_sdk.py --bundle`.
-Its output in `dist/` is not a published release. Publication runs only from
-the protected workflow; the local tool rejects an unapproved invocation.
+Its output in `dist/` is not a published release. This repository contains no
+publication scripts, credentials, or CI workflows.
 
 SDK, CLI and skill instructions use Apache-2.0. The OxideVM engine and guest programs retain their separate licenses.
