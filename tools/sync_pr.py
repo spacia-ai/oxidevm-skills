@@ -1,12 +1,13 @@
-"""Open a metadata-only SDK synchronization PR without force-pushing a branch."""
+"""Prepare a metadata-only review branch without force-pushing or changing org policy."""
 import base64
 import json
 import subprocess
+from urllib.parse import quote
 from catalog import ROOT, catalogs
 from sync_sdk import REPOSITORY, gh
 
 
-def open_pull_request() -> None:
+def prepare_review_branch() -> None:
     allowed = {'plugin.json', 'compatibility.json', *catalogs()}
     changed = subprocess.check_output(['git', 'diff', '--name-only'], cwd=ROOT, text=True).splitlines()
     if not set(changed) <= allowed:
@@ -32,10 +33,14 @@ def open_pull_request() -> None:
         commit = gh(['api', f'repos/{REPOSITORY}/git/commits', '--input', '-'], {'message': f'Sync skills with SDK {version}', 'tree': candidate['sha'], 'parents': [main]})
         gh(['api', f'repos/{REPOSITORY}/git/refs', '--input', '-'], {'ref': 'refs/heads/' + branch, 'sha': commit['sha']})
     existing = gh(['api', f'repos/{REPOSITORY}/pulls?state=open&head=spacia-ai:{branch}&base=main'])
-    if not existing:
-        gh(['api', f'repos/{REPOSITORY}/pulls', '--input', '-'], {'title': f'Sync OxideVM skills with SDK {version}', 'head': branch, 'base': 'main', 'body': f'Verified both clients’ bundled skill files against the actual published SDK/CLI {version} archive and npm integrity. This updates version metadata only. Publishing still requires the protected release job.'})
-    print('Prepared reviewed synchronization branch ' + branch)
+    url = existing[0]['html_url'] if existing else f'https://github.com/{REPOSITORY}/compare/main...{quote(branch, safe="")}?expand=1'
+    print('Prepared synchronization branch ' + branch + '. Owner review: ' + url)
+    import os
+    summary = os.environ.get('GITHUB_STEP_SUMMARY')
+    if summary:
+        with open(summary, 'a') as output:
+            output.write(f'## SDK {version} skills ready for review\n\n[Open the release review]({url}). The organization requires a person to open the PR. Only version metadata changed. Publication still requires protected environment approval.\n')
 
 
 if __name__ == '__main__':
-    open_pull_request()
+    prepare_review_branch()
