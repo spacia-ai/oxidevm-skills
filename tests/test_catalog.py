@@ -24,7 +24,7 @@ class CatalogTests(unittest.TestCase):
         first = check(self.root)
         write_catalogs(self.root)
         self.assertEqual(check(self.root), first)
-        self.assertEqual(len(first['files']), 6)
+        self.assertEqual(len(first['files']), 8)
 
     def test_host_version_drift_is_rejected(self):
         write_catalogs(self.root)
