@@ -1,6 +1,6 @@
 {
   "name": "oxidevm",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "Build browser applications with the OxideVM SDK, extend its Linux Python starter, and diagnose integration errors.",
   "author": {
     "name": "Spacia B.V."
